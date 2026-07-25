@@ -60,7 +60,7 @@ function generateUsers(count: number): User[] {
 
 function generateLoginEvents(users: User[], rng: () => number): LoginEvent[] {
   const events: LoginEvent[] = [];
-  const now = new Date('2026-07-25T00:00:00Z');
+  const now = new Date();
 
   users.forEach(user => {
     const isHighActivity = rng() < 0.15;
@@ -106,7 +106,7 @@ function generateLoginEvents(users: User[], rng: () => number): LoginEvent[] {
 
 function generateFileAccessEvents(users: User[], rng: () => number): FileAccessEvent[] {
   const events: FileAccessEvent[] = [];
-  const now = new Date('2026-07-25T00:00:00Z');
+  const now = new Date();
   const actions: Array<'read' | 'write' | 'download' | 'delete'> = ['read', 'write', 'download', 'delete'];
 
   users.forEach(user => {
@@ -141,7 +141,7 @@ function generateFileAccessEvents(users: User[], rng: () => number): FileAccessE
 
 function generateDataTransferEvents(users: User[], rng: () => number): DataTransferEvent[] {
   const events: DataTransferEvent[] = [];
-  const now = new Date('2026-07-25T00:00:00Z');
+  const now = new Date();
 
   users.forEach(user => {
     const isExfiltrating = rng() < 0.05;
@@ -177,8 +177,10 @@ function computeBaseline(
   userId: string,
   loginEvents: LoginEvent[],
   fileEvents: FileAccessEvent[],
-  transferEvents: DataTransferEvent[]
+  transferEvents: DataTransferEvent[],
+  referenceTime?: number
 ): BaselineProfile {
+  const now = referenceTime || Date.now();
   const dayBuckets = new Map<number, { logins: number; files: number; transfers: number; dataVolume: number }>();
   const hourlyActivity = new Array(24).fill(0);
 
@@ -191,7 +193,7 @@ function computeBaseline(
   const userTransfers = transferEvents.filter(e => e.userId === userId);
 
   userLogins.forEach(e => {
-    const d = Math.floor((Date.now() - new Date(e.timestamp).getTime()) / 86400000);
+    const d = Math.floor((now - new Date(e.timestamp).getTime()) / 86400000);
     if (d >= 0 && d < 30) {
       const bucket = dayBuckets.get(d)!;
       bucket.logins++;
@@ -200,7 +202,7 @@ function computeBaseline(
   });
 
   userFiles.forEach(e => {
-    const d = Math.floor((Date.now() - new Date(e.timestamp).getTime()) / 86400000);
+    const d = Math.floor((now - new Date(e.timestamp).getTime()) / 86400000);
     if (d >= 0 && d < 30) {
       const bucket = dayBuckets.get(d)!;
       bucket.files++;
@@ -209,7 +211,7 @@ function computeBaseline(
   });
 
   userTransfers.forEach(e => {
-    const d = Math.floor((Date.now() - new Date(e.timestamp).getTime()) / 86400000);
+    const d = Math.floor((now - new Date(e.timestamp).getTime()) / 86400000);
     if (d >= 0 && d < 30) {
       const bucket = dayBuckets.get(d)!;
       bucket.transfers++;
@@ -322,19 +324,20 @@ function generateAlerts(
 ): Alert[] {
   const alerts: Alert[] = [];
   let alertId = 1;
+  const now = Date.now();
 
   const recentLogins = loginEvents.filter(e => {
-    const d = (Date.now() - new Date(e.timestamp).getTime()) / 86400000;
+    const d = (now - new Date(e.timestamp).getTime()) / 86400000;
     return d < 2;
   });
 
   const recentFiles = fileEvents.filter(e => {
-    const d = (Date.now() - new Date(e.timestamp).getTime()) / 86400000;
+    const d = (now - new Date(e.timestamp).getTime()) / 86400000;
     return d < 2;
   });
 
   const recentTransfers = transferEvents.filter(e => {
-    const d = (Date.now() - new Date(e.timestamp).getTime()) / 86400000;
+    const d = (now - new Date(e.timestamp).getTime()) / 86400000;
     return d < 2;
   });
 
@@ -393,6 +396,7 @@ function generateAlerts(
           factors: factors.filter(f => f.name === 'Login Pattern' || f.name === 'Time-of-Access'),
           status: loginScore > 60 ? 'investigating' : 'active',
           eventId: event.id,
+          eventData: { ...event },
         });
       }
     }
@@ -412,6 +416,7 @@ function generateAlerts(
           factors: factors.filter(f => f.name === 'File Access Volume' || f.name === 'Time-of-Access'),
           status: fileScore > 60 ? 'investigating' : 'active',
           eventId: event.id,
+          eventData: { ...event },
         });
       }
     }
@@ -431,6 +436,7 @@ function generateAlerts(
           factors: factors.filter(f => f.name === 'Data Transfer Volume' || f.name === 'Time-of-Access'),
           status: transferScore > 60 ? 'investigating' : 'active',
           eventId: event.id,
+          eventData: { ...event },
         });
       }
     }
@@ -439,35 +445,39 @@ function generateAlerts(
   return alerts.sort((a, b) => b.riskScore - a.riskScore);
 }
 
-function generateActionLog(): ActionLogEntry[] {
-  const now = new Date('2026-07-25T00:00:00Z');
-  const entries: ActionLogEntry[] = [
-    { id: 'AL001', timestamp: new Date(now.getTime() - 3600000 * 2).toISOString(), action: 'Baseline Recalculated', details: 'Baseline profiles updated for 200 users across 10 departments', level: 'info' },
-    { id: 'AL002', timestamp: new Date(now.getTime() - 3600000 * 1.5).toISOString(), action: 'Anomaly Scan Complete', details: 'Scanned 1,247 events in the last 24h window. 47 anomalies detected.', level: 'info' },
-    { id: 'AL003', timestamp: new Date(now.getTime() - 3600000 * 1).toISOString(), action: 'Alert Escalated', details: 'Alert #A0001 escalated to Critical — 3 correlated anomalies for user U042', level: 'warning' },
-    { id: 'AL004', timestamp: new Date(now.getTime() - 3600000 * 0.5).toISOString(), action: 'Sensitivity Updated', details: 'Detection sensitivity adjusted to 1.2x — re-scoring active alerts', level: 'info' },
-    { id: 'AL005', timestamp: new Date(now.getTime() - 3600000 * 0.25).toISOString(), action: 'Feedback Processed', details: '12 false positives marked — baseline adjusted for 8 users', level: 'success' },
-    { id: 'AL006', timestamp: new Date(now.getTime() - 3600000 * 0.1).toISOString(), action: 'New Events Ingested', details: 'Batch ingested 89 new log events from simulated SIEM connector', level: 'info' },
+function generateActionLog(userCount: number): ActionLogEntry[] {
+  const now = new Date();
+  return [
+    { id: 'AL001', timestamp: new Date(now.getTime() - 3600000 * 2).toISOString(), action: 'Baseline Recalculated', details: `Baseline profiles updated for ${userCount} users across 10 departments`, level: 'info' },
+    { id: 'AL002', timestamp: new Date(now.getTime() - 3600000 * 1.5).toISOString(), action: 'Anomaly Scan Complete', details: `Scanned recent events in the 48h window. Anomalies detected.`, level: 'info' },
+    { id: 'AL003', timestamp: new Date(now.getTime() - 3600000 * 1).toISOString(), action: 'Alert Escalated', details: 'High-risk alert escalated — 3 correlated anomalies detected', level: 'warning' },
+    { id: 'AL004', timestamp: new Date(now.getTime() - 3600000 * 0.5).toISOString(), action: 'Sensitivity Updated', details: 'Detection sensitivity adjusted — re-scoring active alerts', level: 'info' },
+    { id: 'AL005', timestamp: new Date(now.getTime() - 3600000 * 0.25).toISOString(), action: 'Feedback Processed', details: 'False positives marked — baselines recalibrated for affected users', level: 'success' },
+    { id: 'AL006', timestamp: new Date(now.getTime() - 3600000 * 0.1).toISOString(), action: 'New Events Ingested', details: 'Batch ingested new log events from simulated SIEM connector', level: 'info' },
   ];
-  return entries;
 }
 
-// Cache
-let _cache: {
+// Cache: events + baselines (sensitivity-independent)
+let _eventCache: EventCache | null = null;
+
+// Mutable state
+let _alerts: Alert[] | null = null;
+let _actionLog: ActionLogEntry[] | null = null;
+let _feedbackUsers: Set<string> = new Set();
+
+type EventCache = {
   users: User[];
   logins: LoginEvent[];
   files: FileAccessEvent[];
   transfers: DataTransferEvent[];
   baselines: Map<string, BaselineProfile>;
-  alerts: Alert[];
-  actionLog: ActionLogEntry[];
-} | null = null;
+};
 
-export function getData(sensitivity: number = 1.0) {
-  if (_cache) return _cache;
+function buildEventCache(): EventCache {
+  if (_eventCache) return _eventCache;
 
-  const rng = seededRandom(42);
   const users = generateUsers(200);
+  const rng = seededRandom(42);
   const logins = generateLoginEvents(users, rng);
   const files = generateFileAccessEvents(users, rng);
   const transfers = generateDataTransferEvents(users, rng);
@@ -477,15 +487,95 @@ export function getData(sensitivity: number = 1.0) {
     baselines.set(user.id, computeBaseline(user.id, logins, files, transfers));
   });
 
-  const alerts = generateAlerts(users, baselines, logins, files, transfers, sensitivity);
-  const actionLog = generateActionLog();
+  const cache: EventCache = { users, logins, files, transfers, baselines };
+  _eventCache = cache;
+  return cache;
+}
 
-  _cache = { users, logins, files, transfers, baselines, alerts, actionLog };
-  return _cache;
+export interface SentinelXData {
+  users: User[];
+  baselines: Map<string, BaselineProfile>;
+  alerts: Alert[];
+  actionLog: ActionLogEntry[];
+  totalDepartments: number;
+}
+
+export function getData(sensitivity: number = 1.0): SentinelXData {
+  const cache = buildEventCache();
+
+  if (!_alerts) {
+    _alerts = generateAlerts(cache.users, cache.baselines, cache.logins, cache.files, cache.transfers, sensitivity);
+  }
+
+  if (!_actionLog) {
+    _actionLog = generateActionLog(cache.users.length);
+  }
+
+  return {
+    users: cache.users,
+    baselines: cache.baselines,
+    alerts: _alerts,
+    actionLog: _actionLog,
+    totalDepartments: DEPARTMENTS.length,
+  };
+}
+
+export function regenerateData(sensitivity: number): SentinelXData {
+  _alerts = null;
+  return getData(sensitivity);
+}
+
+export function applyFeedback(
+  alertId: string,
+  status: 'confirmed_threat' | 'false_positive'
+): { alerts: Alert[]; actionLog: ActionLogEntry[]; affectedUsers: number } {
+  if (!_alerts) getData(1.0);
+  if (!_alerts) return { alerts: [], actionLog: [], affectedUsers: 0 };
+
+  const alert = _alerts.find(a => a.id === alertId);
+  if (!alert) return { alerts: _alerts, actionLog: _actionLog || [], affectedUsers: 0 };
+
+  _alerts = _alerts.map(a => a.id === alertId ? { ...a, status } : a);
+
+  _feedbackUsers.add(alert.userId);
+
+  if (status === 'false_positive') {
+    const cache = buildEventCache();
+    const updatedBaseline = computeBaseline(
+      alert.userId,
+      cache.logins,
+      cache.files,
+      cache.transfers
+    );
+    cache.baselines.set(alert.userId, updatedBaseline);
+  }
+
+  const now = new Date();
+  const entry: ActionLogEntry = {
+    id: `AL${String((_actionLog?.length || 0) + 1).padStart(3, '0')}`,
+    timestamp: now.toISOString(),
+    action: status === 'false_positive' ? 'False Positive Marked' : 'Threat Confirmed',
+    details: status === 'false_positive'
+      ? `Alert ${alertId} marked as false positive — baseline recalibrated for user ${alert.userId}`
+      : `Alert ${alertId} confirmed as threat — user ${alert.userId} flagged for investigation`,
+    level: status === 'false_positive' ? 'success' : 'warning',
+  };
+
+  _actionLog = [entry, ...(_actionLog || [])];
+
+  return {
+    alerts: _alerts,
+    actionLog: _actionLog,
+    affectedUsers: _feedbackUsers.size,
+  };
 }
 
 export function getUserById(users: User[], id: string): User | undefined {
   return users.find(u => u.id === id);
+}
+
+export function buildUserMap(users: User[]): Map<string, User> {
+  return new Map(users.map(u => [u.id, u]));
 }
 
 export function formatBytes(bytes: number): string {
@@ -502,13 +592,8 @@ export function formatTimestamp(ts: string): string {
   const diffH = Math.floor(diffMs / 3600000);
   const diffD = Math.floor(diffMs / 86400000);
 
-  if (diffH < 1) return `${Math.floor(diffMs / 60000)}m ago`;
+  if (diffH < 1) return `${Math.max(1, Math.floor(diffMs / 60000))}m ago`;
   if (diffH < 24) return `${diffH}h ago`;
   if (diffD < 7) return `${diffD}d ago`;
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-}
-
-export function regenerateData(sensitivity: number) {
-  _cache = null;
-  return getData(sensitivity);
 }

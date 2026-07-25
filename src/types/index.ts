@@ -36,14 +36,6 @@ export interface DataTransferEvent {
   protocol: string;
 }
 
-export type EventActivity = {
-  hour: number;
-  logins: number;
-  fileAccesses: number;
-  dataTransfers: number;
-  totalDataVolume: number;
-};
-
 export type BaselineProfile = {
   userId: string;
   avgLoginsPerDay: number;
@@ -74,6 +66,7 @@ export type Alert = {
   factors: AnomalyFactor[];
   status: 'active' | 'confirmed_threat' | 'false_positive' | 'investigating';
   eventId: string;
+  eventData?: LoginEvent | FileAccessEvent | DataTransferEvent;
 };
 
 export type ActionLogEntry = {

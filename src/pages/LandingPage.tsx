@@ -50,7 +50,7 @@ export default function LandingPage() {
             Autonomous Insider Threat Detection
           </div>
 
-          <h1 className="font-display text-5xl md:text-7xl font-bold leading-tight mb-6">
+          <h1 className="font-display text-3xl sm:text-5xl md:text-7xl font-bold leading-tight mb-6">
             Catch the threat<br />
             <span className="bg-gradient-to-r from-cyan-400 to-cyan-600 bg-clip-text text-transparent">
               before the damage is done.

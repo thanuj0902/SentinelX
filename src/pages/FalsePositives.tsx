@@ -1,17 +1,20 @@
-import { useState } from 'react';
-import { CheckCircle, XCircle, TrendingDown, AlertTriangle, BarChart3 } from 'lucide-react';
-import { getUserById } from '../data/seed';
+import { useState, useMemo } from 'react';
+import { CheckCircle, XCircle, TrendingDown, AlertTriangle, BarChart3, Info } from 'lucide-react';
+import { buildUserMap } from '../data/seed';
 import type { Alert, User } from '../types';
 
 interface FalsePositivesProps {
   alerts: Alert[];
   users: User[];
-  onMarkAlert: (alertId: string, status: Alert['status']) => void;
+  onMarkAlert: (alertId: string, status: 'confirmed_threat' | 'false_positive') => void;
 }
 
 export default function FalsePositives({ alerts, users, onMarkAlert }: FalsePositivesProps) {
   const [selectedTab, setSelectedTab] = useState<'review' | 'history'>('review');
+  const [confirmId, setConfirmId] = useState<string | null>(null);
+  const [confirmStatus, setConfirmStatus] = useState<'confirmed_threat' | 'false_positive' | null>(null);
 
+  const userMap = useMemo(() => buildUserMap(users), [users]);
   const reviewableAlerts = alerts.filter((a: Alert) => a.status === 'active' || a.status === 'investigating');
   const resolvedAlerts = alerts.filter((a: Alert) => a.status === 'confirmed_threat' || a.status === 'false_positive');
 
@@ -20,8 +23,64 @@ export default function FalsePositives({ alerts, users, onMarkAlert }: FalsePosi
   const totalResolved = confirmedCount + falsePositiveCount;
   const falsePositiveRate = totalResolved > 0 ? Math.round((falsePositiveCount / totalResolved) * 100) : 0;
 
+  const handleMark = (id: string, status: 'confirmed_threat' | 'false_positive') => {
+    setConfirmId(id);
+    setConfirmStatus(status);
+  };
+
+  const confirmMark = () => {
+    if (confirmId && confirmStatus) {
+      onMarkAlert(confirmId, confirmStatus);
+      setConfirmId(null);
+      setConfirmStatus(null);
+    }
+  };
+
   return (
     <div className="space-y-6">
+      {/* Confirmation Dialog */}
+      {confirmId && confirmStatus && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="glass-card rounded-2xl p-6 max-w-sm mx-4 border border-white/10">
+            <div className="flex items-center gap-3 mb-4">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                confirmStatus === 'confirmed_threat' ? 'bg-red-500/10' : 'bg-emerald-500/10'
+              }`}>
+                {confirmStatus === 'confirmed_threat' ? (
+                  <AlertTriangle size={18} className="text-red-400" />
+                ) : (
+                  <CheckCircle size={18} className="text-emerald-400" />
+                )}
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-white">
+                  {confirmStatus === 'confirmed_threat' ? 'Confirm Threat?' : 'Mark as False Positive?'}
+                </h3>
+                <p className="text-xs text-white/40">This will update the user&apos;s behavioral baseline.</p>
+              </div>
+            </div>
+            <div className="flex gap-2 mt-4">
+              <button
+                onClick={() => { setConfirmId(null); setConfirmStatus(null); }}
+                className="flex-1 px-3 py-2 rounded-lg border border-white/10 text-white/60 text-xs font-medium hover:bg-navy-800/50 transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmMark}
+                className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                  confirmStatus === 'confirmed_threat'
+                    ? 'bg-red-500/20 border border-red-500/30 text-red-400 hover:bg-red-500/30'
+                    : 'bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/30'
+                }`}
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div>
         <h1 className="font-display text-2xl font-bold text-white">False Positive Control Center</h1>
         <p className="text-sm text-white/40 mt-1">Mark alerts to improve detection accuracy</p>
@@ -96,9 +155,12 @@ export default function FalsePositives({ alerts, users, onMarkAlert }: FalsePosi
             </div>
           </div>
         </div>
-        <p className="text-xs text-white/30 mt-3">
-          Marking false positives recalibrates baselines, reducing future false alerts.
-        </p>
+        <div className="flex items-start gap-2 mt-3">
+          <Info size={12} className="text-white/30 mt-0.5 shrink-0" />
+          <p className="text-xs text-white/30">
+            Marking false positives recalibrates baselines for affected users, reducing future false alerts.
+          </p>
+        </div>
       </div>
 
       <div className="flex gap-2">
@@ -126,8 +188,8 @@ export default function FalsePositives({ alerts, users, onMarkAlert }: FalsePosi
 
       {selectedTab === 'review' && (
         <div className="space-y-3">
-          {reviewableAlerts.slice(0, 20).map((alert: Alert) => {
-            const user = getUserById(users, alert.userId);
+          {reviewableAlerts.map((alert: Alert) => {
+            const user = userMap.get(alert.userId);
             return (
               <div key={alert.id} className="glass-card rounded-xl p-4 flex items-center gap-4 flex-wrap">
                 <div
@@ -142,14 +204,14 @@ export default function FalsePositives({ alerts, users, onMarkAlert }: FalsePosi
                 </div>
                 <div className="flex gap-2 shrink-0">
                   <button
-                    onClick={() => onMarkAlert(alert.id, 'confirmed_threat')}
+                    onClick={() => handleMark(alert.id, 'confirmed_threat')}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-medium hover:bg-red-500/20 transition-all"
                   >
                     <XCircle size={14} />
                     Threat
                   </button>
                   <button
-                    onClick={() => onMarkAlert(alert.id, 'false_positive')}
+                    onClick={() => handleMark(alert.id, 'false_positive')}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium hover:bg-emerald-500/20 transition-all"
                   >
                     <CheckCircle size={14} />
@@ -164,8 +226,8 @@ export default function FalsePositives({ alerts, users, onMarkAlert }: FalsePosi
 
       {selectedTab === 'history' && (
         <div className="space-y-3">
-          {resolvedAlerts.slice(0, 30).map((alert: Alert) => {
-            const user = getUserById(users, alert.userId);
+          {resolvedAlerts.map((alert: Alert) => {
+            const user = userMap.get(alert.userId);
             return (
               <div key={alert.id} className="glass-card rounded-xl p-4 flex items-center gap-4">
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${

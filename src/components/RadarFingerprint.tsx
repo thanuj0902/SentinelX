@@ -14,10 +14,10 @@ export default function RadarFingerprint({ baseline, userName }: RadarFingerprin
     { label: 'Activity Peak', value: Math.max(...baseline.hourlyActivity) },
   ];
 
-  const size = 200;
+  const size = 220;
   const cx = size / 2;
   const cy = size / 2;
-  const maxR = size / 2 - 30;
+  const maxR = size / 2 - 35;
   const levels = 4;
 
   const angleStep = (Math.PI * 2) / metrics.length;
@@ -40,7 +40,7 @@ export default function RadarFingerprint({ baseline, userName }: RadarFingerprin
       <h4 className="text-sm font-semibold text-white mb-1">Activity Fingerprint</h4>
       <p className="text-xs text-white/40 mb-3">{userName}</p>
       <div className="flex justify-center">
-        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+        <svg width="100%" height="100%" viewBox={`0 0 ${size} ${size}`} className="max-w-[220px]">
           {Array.from({ length: levels }, (_, i) => {
             const r = (maxR / levels) * (i + 1);
             const points = metrics.map((_, j) => {

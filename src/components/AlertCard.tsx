@@ -1,54 +1,35 @@
 import type { Alert, User } from '../types';
-import { getUserById } from '../data/seed';
 import { formatTimestamp } from '../data/seed';
-import { FileText, ArrowUpRight, LogIn } from 'lucide-react';
+import { SEVERITY_BADGES, STATUS_BADGES, EVENT_ICONS, getRiskBarColor } from '../utils/helpers';
 import { useNavigate } from 'react-router-dom';
-import type { LucideIcon } from 'lucide-react';
-
-const SEVERITY_COLORS: Record<string, string> = {
-  critical: 'border-red-500/40 bg-red-500/5',
-  high: 'border-orange-500/40 bg-orange-500/5',
-  medium: 'border-amber-500/40 bg-amber-500/5',
-  low: 'border-cyan-500/20 bg-cyan-500/5',
-};
-
-const SEVERITY_BADGES: Record<string, string> = {
-  critical: 'bg-red-500/20 text-red-400',
-  high: 'bg-orange-500/20 text-orange-400',
-  medium: 'bg-amber-500/20 text-amber-400',
-  low: 'bg-cyan-500/10 text-cyan-400',
-};
-
-const STATUS_BADGES: Record<string, string> = {
-  active: 'bg-cyan-500/10 text-cyan-400',
-  investigating: 'bg-amber-500/10 text-amber-400',
-  confirmed_threat: 'bg-red-500/10 text-red-400',
-  false_positive: 'bg-emerald-500/10 text-emerald-400',
-};
-
-const EVENT_ICONS: Record<string, LucideIcon> = {
-  login: LogIn,
-  file_access: FileText,
-  data_transfer: ArrowUpRight,
-};
 
 interface AlertCardProps {
   alert: Alert;
-  users: User[];
+  userMap: Map<string, User>;
 }
 
-export default function AlertCard({ alert, users }: AlertCardProps) {
+export default function AlertCard({ alert, userMap }: AlertCardProps) {
   const navigate = useNavigate();
-  const user = getUserById(users, alert.userId);
+  const user = userMap.get(alert.userId);
   const EventIcon = EVENT_ICONS[alert.eventType];
+
+  const severityBorder: Record<string, string> = {
+    critical: 'border-red-500/40 bg-red-500/5',
+    high: 'border-orange-500/40 bg-orange-500/5',
+    medium: 'border-amber-500/40 bg-amber-500/5',
+    low: 'border-cyan-500/20 bg-cyan-500/5',
+  };
 
   return (
     <div
+      role="button"
+      tabIndex={0}
       onClick={() => navigate(`/dashboard/alerts/${alert.id}`)}
+      onKeyDown={(e) => { if (e.key === 'Enter') navigate(`/dashboard/alerts/${alert.id}`); }}
       className={`
         glass-card rounded-xl p-4 border cursor-pointer transition-all duration-300
         hover:scale-[1.01] hover:shadow-lg hover:shadow-cyan-500/5
-        ${SEVERITY_COLORS[alert.severity]}
+        ${severityBorder[alert.severity]}
       `}
     >
       <div className="flex items-start justify-between mb-3">
@@ -90,11 +71,7 @@ export default function AlertCard({ alert, users }: AlertCardProps) {
           <span className="text-xs text-white/40">Risk</span>
           <div className="w-20 h-1.5 bg-navy-800 rounded-full overflow-hidden">
             <div
-              className={`h-full rounded-full transition-all duration-500 ${
-                alert.riskScore >= 80 ? 'bg-red-500' :
-                alert.riskScore >= 60 ? 'bg-orange-500' :
-                alert.riskScore >= 35 ? 'bg-amber-500' : 'bg-cyan-500'
-              }`}
+              className={`h-full rounded-full transition-all duration-500 ${getRiskBarColor(alert.riskScore)}`}
               style={{ width: `${alert.riskScore}%` }}
             />
           </div>

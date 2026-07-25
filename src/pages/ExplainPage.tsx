@@ -1,6 +1,8 @@
+import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Brain, ArrowRight } from 'lucide-react';
-import { getUserById, formatTimestamp } from '../data/seed';
+import { buildUserMap, formatTimestamp } from '../data/seed';
+import { getRiskColor, getFactorColor } from '../utils/helpers';
 import type { Alert, User, AnomalyFactor } from '../types';
 
 interface ExplainPageProps {
@@ -10,7 +12,11 @@ interface ExplainPageProps {
 
 export default function ExplainPage({ alerts, users }: ExplainPageProps) {
   const navigate = useNavigate();
-  const topAlerts = [...alerts].sort((a: Alert, b: Alert) => b.riskScore - a.riskScore).slice(0, 15);
+  const userMap = useMemo(() => buildUserMap(users), [users]);
+  const topAlerts = useMemo(
+    () => [...alerts].sort((a: Alert, b: Alert) => b.riskScore - a.riskScore).slice(0, 15),
+    [alerts]
+  );
 
   return (
     <div className="space-y-6">
@@ -34,11 +40,14 @@ export default function ExplainPage({ alerts, users }: ExplainPageProps) {
 
       <div className="space-y-3">
         {topAlerts.map((alert: Alert) => {
-          const user = getUserById(users, alert.userId);
+          const user = userMap.get(alert.userId);
           return (
             <div
               key={alert.id}
+              role="button"
+              tabIndex={0}
               onClick={() => navigate(`/dashboard/alerts/${alert.id}`)}
+              onKeyDown={(e) => { if (e.key === 'Enter') navigate(`/dashboard/alerts/${alert.id}`); }}
               className="glass-card rounded-xl p-4 cursor-pointer hover:border-cyan-500/20 transition-all duration-300 hover:scale-[1.005]"
             >
               <div className="flex items-center gap-4">
@@ -54,24 +63,18 @@ export default function ExplainPage({ alerts, users }: ExplainPageProps) {
                     <span className="text-[10px] text-white/30">{alert.id}</span>
                   </div>
                   <p className="text-xs text-white/50 truncate">{alert.explanation}</p>
-                  <div className="flex items-center gap-3 mt-2">
+                  <div className="flex items-center gap-3 mt-2 flex-wrap">
                     {alert.factors.map((f: AnomalyFactor, i: number) => (
                       <div key={i} className="flex items-center gap-1">
                         <span className="text-[10px] text-white/30">{f.name}:</span>
-                        <span className={`text-[10px] font-bold ${
-                          f.score > 30 ? 'text-red-400' : f.score > 15 ? 'text-amber-400' : 'text-cyan-400'
-                        }`}>+{f.score}</span>
+                        <span className={`text-[10px] font-bold ${getFactorColor(f.score)}`}>+{f.score}</span>
                       </div>
                     ))}
                   </div>
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
                   <div className="text-right">
-                    <p className={`text-lg font-bold ${
-                      alert.riskScore >= 80 ? 'text-red-400' :
-                      alert.riskScore >= 60 ? 'text-orange-400' :
-                      alert.riskScore >= 35 ? 'text-amber-400' : 'text-cyan-400'
-                    }`}>{alert.riskScore}</p>
+                    <p className={`text-lg font-bold ${getRiskColor(alert.riskScore)}`}>{alert.riskScore}</p>
                     <p className="text-[10px] text-white/30">{formatTimestamp(alert.timestamp)}</p>
                   </div>
                   <ArrowRight size={16} className="text-white/20" />

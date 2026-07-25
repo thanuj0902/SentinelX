@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { AlertTriangle, Filter, Search } from 'lucide-react';
 import AlertCard from '../components/AlertCard';
 import SensitivitySlider from '../components/SensitivitySlider';
+import { buildUserMap } from '../data/seed';
 import type { Alert, User } from '../types';
 
 interface AlertsPageProps {
@@ -17,6 +18,7 @@ export default function AlertsPage({ alerts, users, sensitivity, onSensitivityCh
   const [departmentFilter, setDepartmentFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
+  const userMap = useMemo(() => buildUserMap(users), [users]);
   const departments = useMemo(() => [...new Set(users.map(u => u.department))].sort(), [users]);
 
   const filtered = useMemo(() => {
@@ -24,11 +26,11 @@ export default function AlertsPage({ alerts, users, sensitivity, onSensitivityCh
       if (severityFilter !== 'all' && a.severity !== severityFilter) return false;
       if (statusFilter !== 'all' && a.status !== statusFilter) return false;
       if (departmentFilter !== 'all') {
-        const user = users.find(u => u.id === a.userId);
+        const user = userMap.get(a.userId);
         if (user?.department !== departmentFilter) return false;
       }
       if (searchQuery) {
-        const user = users.find(u => u.id === a.userId);
+        const user = userMap.get(a.userId);
         const q = searchQuery.toLowerCase();
         return (
           user?.name.toLowerCase().includes(q) ||
@@ -39,7 +41,9 @@ export default function AlertsPage({ alerts, users, sensitivity, onSensitivityCh
       }
       return true;
     });
-  }, [alerts, severityFilter, statusFilter, departmentFilter, searchQuery, users]);
+  }, [alerts, severityFilter, statusFilter, departmentFilter, searchQuery, userMap]);
+
+  const selectClass = "px-3 py-2 rounded-lg bg-navy-800/50 border border-white/10 text-sm text-white focus:outline-none focus:border-cyan-500/30 appearance-none cursor-pointer";
 
   return (
     <div className="space-y-6">
@@ -73,7 +77,7 @@ export default function AlertsPage({ alerts, users, sensitivity, onSensitivityCh
           <select
             value={severityFilter}
             onChange={(e) => setSeverityFilter(e.target.value)}
-            className="px-3 py-2 rounded-lg bg-navy-800/50 border border-white/10 text-sm text-white focus:outline-none focus:border-cyan-500/30"
+            className={selectClass}
           >
             <option value="all">All Severity</option>
             <option value="critical">Critical</option>
@@ -86,7 +90,7 @@ export default function AlertsPage({ alerts, users, sensitivity, onSensitivityCh
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-3 py-2 rounded-lg bg-navy-800/50 border border-white/10 text-sm text-white focus:outline-none focus:border-cyan-500/30"
+          className={selectClass}
         >
           <option value="all">All Status</option>
           <option value="active">Active</option>
@@ -98,7 +102,7 @@ export default function AlertsPage({ alerts, users, sensitivity, onSensitivityCh
         <select
           value={departmentFilter}
           onChange={(e) => setDepartmentFilter(e.target.value)}
-          className="px-3 py-2 rounded-lg bg-navy-800/50 border border-white/10 text-sm text-white focus:outline-none focus:border-cyan-500/30"
+          className={selectClass}
         >
           <option value="all">All Departments</option>
           {departments.map(d => (
@@ -109,7 +113,7 @@ export default function AlertsPage({ alerts, users, sensitivity, onSensitivityCh
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         {filtered.map(alert => (
-          <AlertCard key={alert.id} alert={alert} users={users} />
+          <AlertCard key={alert.id} alert={alert} userMap={userMap} />
         ))}
       </div>
 

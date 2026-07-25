@@ -22,8 +22,8 @@ function DashboardRoutes() {
   } = useSentinelX();
 
   return (
-    <Routes>
-      <Route element={<DashboardLayout />}>
+    <DashboardLayout userCount={data.users.length}>
+      <Routes>
         <Route index element={
           <Overview
             data={data}
@@ -46,6 +46,7 @@ function DashboardRoutes() {
             alerts={alerts}
             users={data.users}
             baselines={data.baselines}
+            onMarkAlert={markAlert}
           />
         } />
         <Route path="explain" element={
@@ -64,8 +65,8 @@ function DashboardRoutes() {
         <Route path="action-log" element={
           <ActionLog entries={data.actionLog} />
         } />
-      </Route>
-    </Routes>
+      </Routes>
+    </DashboardLayout>
   );
 }
 
@@ -75,6 +76,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/dashboard/*" element={<DashboardRoutes />} />
+        <Route path="*" element={<LandingPage />} />
       </Routes>
     </BrowserRouter>
   );

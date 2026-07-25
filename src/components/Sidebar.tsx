@@ -10,7 +10,11 @@ const NAV_ITEMS = [
   { path: '/dashboard/action-log', icon: ClipboardList, label: 'Action Log' },
 ];
 
-export default function Sidebar() {
+interface SidebarProps {
+  userCount?: number;
+}
+
+export default function Sidebar({ userCount = 200 }: SidebarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
 
@@ -19,6 +23,7 @@ export default function Sidebar() {
       <button
         onClick={() => setMobileOpen(true)}
         className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-navy-800 border border-cyan-500/20"
+        aria-label="Open menu"
       >
         <Menu size={20} className="text-cyan-400" />
       </button>
@@ -42,7 +47,7 @@ export default function Sidebar() {
               <p className="text-[10px] text-cyan-400/60 uppercase tracking-widest">Threat Hunter</p>
             </div>
           </div>
-          <button onClick={() => setMobileOpen(false)} className="lg:hidden text-white/50 hover:text-white">
+          <button onClick={() => setMobileOpen(false)} className="lg:hidden text-white/50 hover:text-white" aria-label="Close menu">
             <X size={18} />
           </button>
         </div>
@@ -74,7 +79,7 @@ export default function Sidebar() {
             <Activity size={14} className="text-emerald-500 animate-pulse" />
             <span className="text-xs text-emerald-400">Engine Active</span>
           </div>
-          <p className="text-[10px] text-white/30 mt-1 px-2">200 users monitored</p>
+          <p className="text-[10px] text-white/30 mt-1 px-2">{userCount} users monitored</p>
         </div>
       </aside>
     </>

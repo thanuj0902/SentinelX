@@ -1,6 +1,8 @@
+import { useMemo } from 'react';
 import { Activity, AlertTriangle, Users, Shield, TrendingUp, TrendingDown } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
 import StatCard from '../components/StatCard';
+import { getRiskColor } from '../utils/helpers';
 import type { Alert, User, BaselineProfile } from '../types';
 
 interface TopRiskUser {
@@ -22,6 +24,7 @@ interface OverviewProps {
     users: User[];
     alerts: Alert[];
     baselines: Map<string, BaselineProfile>;
+    totalDepartments: number;
   };
   activeAlerts: Alert[];
   alertsByDay: AlertByDay[];
@@ -56,12 +59,23 @@ export default function Overview({ data, activeAlerts, alertsByDay, topRiskUsers
   const highCount = activeAlerts.filter((a: Alert) => a.severity === 'high').length;
   const confirmedThreats = data.alerts.filter((a: Alert) => a.status === 'confirmed_threat').length;
 
-  const riskDist = [
+  const riskDist = useMemo(() => [
     { name: 'Critical', value: data.alerts.filter((a: Alert) => a.severity === 'critical').length, color: '#ef4444' },
     { name: 'High', value: data.alerts.filter((a: Alert) => a.severity === 'high').length, color: '#f97316' },
     { name: 'Medium', value: data.alerts.filter((a: Alert) => a.severity === 'medium').length, color: '#f59e0b' },
     { name: 'Low', value: data.alerts.filter((a: Alert) => a.severity === 'low').length, color: '#22d3ee' },
-  ];
+  ], [data.alerts]);
+
+  const alertTrend = useMemo(() => {
+    if (alertsByDay.length < 2) return { value: 0, direction: 'up' as const };
+    const recent = alertsByDay[alertsByDay.length - 1];
+    const prev = alertsByDay[alertsByDay.length - 2];
+    const recentTotal = recent.critical + recent.high + recent.medium + recent.low;
+    const prevTotal = prev.critical + prev.high + prev.medium + prev.low;
+    if (prevTotal === 0) return { value: recentTotal > 0 ? 100 : 0, direction: 'up' as const };
+    const pct = Math.round(((recentTotal - prevTotal) / prevTotal) * 100);
+    return { value: Math.abs(pct), direction: pct >= 0 ? 'up' as const : 'down' as const };
+  }, [alertsByDay]);
 
   return (
     <div className="space-y-6">
@@ -80,7 +94,7 @@ export default function Overview({ data, activeAlerts, alertsByDay, topRiskUsers
         <StatCard
           label="Users Monitored"
           value={data.users.length}
-          sublabel="Across 10 departments"
+          sublabel={`Across ${data.totalDepartments} departments`}
           icon={<Users size={18} />}
           color="cyan"
         />
@@ -90,7 +104,7 @@ export default function Overview({ data, activeAlerts, alertsByDay, topRiskUsers
           sublabel={`${criticalCount} critical, ${highCount} high`}
           icon={<AlertTriangle size={18} />}
           color={criticalCount > 0 ? 'red' : 'amber'}
-          trend={{ value: 12, direction: 'up' }}
+          trend={alertTrend}
         />
         <StatCard
           label="Threats Confirmed"
@@ -180,11 +194,7 @@ export default function Overview({ data, activeAlerts, alertsByDay, topRiskUsers
                 ) : (
                   <TrendingDown size={14} className="text-emerald-400" />
                 )}
-                <span className={`text-sm font-bold ${
-                  item.maxScore >= 80 ? 'text-red-400' :
-                  item.maxScore >= 60 ? 'text-orange-400' :
-                  item.maxScore >= 35 ? 'text-amber-400' : 'text-cyan-400'
-                }`}>
+                <span className={`text-sm font-bold ${getRiskColor(item.maxScore)}`}>
                   {item.maxScore}
                 </span>
               </div>
