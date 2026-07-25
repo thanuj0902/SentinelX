@@ -1,13 +1,13 @@
 import { Component, type ReactNode } from 'react';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 
-interface Props { children: ReactNode; fallback?: ReactNode; }
-interface State { hasError: boolean; error: Error | null; }
+interface ErrorBoundaryProps { children: ReactNode; fallback?: ReactNode; }
+interface ErrorBoundaryState { hasError: boolean; error: Error | null; }
 
-export default class ErrorBoundary extends Component<Props, State> {
-  state: State = { hasError: false, error: null };
+export default class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  state: ErrorBoundaryState = { hasError: false, error: null };
 
-  static getDerivedStateFromError(error: Error): State {
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
     return { hasError: true, error };
   }
 

@@ -1,5 +1,8 @@
 import type { LucideIcon } from 'lucide-react';
 import { FileText, ArrowUpRight, LogIn } from 'lucide-react';
+import type { User } from '../types';
+
+// ── Constants ──
 
 export const SEVERITY_COLORS: Record<string, string> = {
   critical: 'text-red-400 bg-red-500/10 border-red-500/20',
@@ -35,6 +38,8 @@ export const EVENT_ICONS: Record<string, LucideIcon> = {
   data_transfer: ArrowUpRight,
 };
 
+// ── Color helpers ──
+
 export function getRiskColor(score: number): string {
   if (score >= 80) return 'text-red-400';
   if (score >= 60) return 'text-orange-400';
@@ -59,4 +64,36 @@ export function getFactorBarColor(score: number): string {
   if (score > 30) return 'bg-red-500';
   if (score > 15) return 'bg-amber-500';
   return 'bg-cyan-500';
+}
+
+// ── Formatting ──
+
+export function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+}
+
+export function formatTimestamp(ts: string): string {
+  const d = new Date(ts);
+  const now = new Date();
+  const diffMs = now.getTime() - d.getTime();
+  const diffH = Math.floor(diffMs / 3600000);
+  const diffD = Math.floor(diffMs / 86400000);
+
+  if (diffH < 1) return `${Math.max(1, Math.floor(diffMs / 60000))}m ago`;
+  if (diffH < 24) return `${diffH}h ago`;
+  if (diffD < 7) return `${diffD}d ago`;
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+// ── User helpers ──
+
+export function getUserById(users: User[], id: string): User | undefined {
+  return users.find(u => u.id === id);
+}
+
+export function buildUserMap(users: User[]): Map<string, User> {
+  return new Map(users.map(u => [u.id, u]));
 }

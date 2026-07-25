@@ -1,8 +1,8 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { CheckCircle, XCircle, TrendingDown, AlertTriangle, BarChart3, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
-import { buildUserMap } from '../data/seed';
+import { useUserMap } from '../hooks/useUserMap';
 import type { Alert, User } from '../types';
 
 interface FalsePositivesProps {
@@ -17,7 +17,7 @@ export default function FalsePositives({ alerts, users, onMarkAlert }: FalsePosi
   const [confirmStatus, setConfirmStatus] = useState<'confirmed_threat' | 'false_positive' | null>(null);
   const [marking, setMarking] = useState(false);
 
-  const userMap = useMemo(() => buildUserMap(users), [users]);
+  const userMap = useUserMap(users);
   const reviewableAlerts = alerts.filter((a: Alert) => a.status === 'active' || a.status === 'investigating');
   const resolvedAlerts = alerts.filter((a: Alert) => a.status === 'confirmed_threat' || a.status === 'false_positive');
   const confirmedCount = alerts.filter((a: Alert) => a.status === 'confirmed_threat').length;

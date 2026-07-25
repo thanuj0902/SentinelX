@@ -1,13 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { LayoutDashboard, AlertTriangle, Brain, ToggleLeft, ClipboardList } from 'lucide-react';
-
-const NAV_ITEMS = [
-  { path: '/dashboard', icon: LayoutDashboard, label: 'Overview' },
-  { path: '/dashboard/alerts', icon: AlertTriangle, label: 'Alerts' },
-  { path: '/dashboard/explain', icon: Brain, label: 'Explain' },
-  { path: '/dashboard/false-positives', icon: ToggleLeft, label: 'FP' },
-  { path: '/dashboard/action-log', icon: ClipboardList, label: 'Log' },
-];
+import { NAV_ITEMS } from '../config/nav';
 
 export default function BottomNav() {
   const location = useLocation();
@@ -31,7 +23,7 @@ export default function BottomNav() {
               <div className={`p-1 rounded-lg transition-all duration-200 ${isActive ? 'bg-cyan-500/15' : ''}`}>
                 <item.icon size={18} />
               </div>
-              <span className="text-[10px] font-medium">{item.label}</span>
+              <span className="text-[10px] font-medium">{item.shortLabel}</span>
             </NavLink>
           );
         })}

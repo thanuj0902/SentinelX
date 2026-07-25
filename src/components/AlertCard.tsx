@@ -1,6 +1,5 @@
 import type { Alert, User } from '../types';
-import { formatTimestamp } from '../data/seed';
-import { SEVERITY_BADGES, STATUS_BADGES, EVENT_ICONS, getRiskBarColor } from '../utils/helpers';
+import { SEVERITY_BADGES, STATUS_BADGES, EVENT_ICONS, SEVERITY_BORDER_COLORS, getRiskBarColor, formatTimestamp } from '../utils/helpers';
 import { useNavigate } from 'react-router-dom';
 
 interface AlertCardProps {
@@ -13,13 +12,6 @@ export default function AlertCard({ alert, userMap }: AlertCardProps) {
   const user = userMap.get(alert.userId);
   const EventIcon = EVENT_ICONS[alert.eventType];
 
-  const severityBorder: Record<string, string> = {
-    critical: 'border-red-500/40 bg-red-500/5',
-    high: 'border-orange-500/40 bg-orange-500/5',
-    medium: 'border-amber-500/40 bg-amber-500/5',
-    low: 'border-cyan-500/20 bg-cyan-500/5',
-  };
-
   return (
     <div
       role="button"
@@ -29,7 +21,7 @@ export default function AlertCard({ alert, userMap }: AlertCardProps) {
       className={`
         glass-card rounded-xl p-4 border cursor-pointer transition-all duration-300
         hover:scale-[1.01] hover:shadow-lg hover:shadow-cyan-500/5
-        ${severityBorder[alert.severity]}
+        ${SEVERITY_BORDER_COLORS[alert.severity]}
       `}
     >
       <div className="flex items-start justify-between mb-3">

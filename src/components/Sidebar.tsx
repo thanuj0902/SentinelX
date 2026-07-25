@@ -1,14 +1,7 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { Shield, LayoutDashboard, AlertTriangle, Brain, ToggleLeft, ClipboardList, Activity, Menu, X } from 'lucide-react';
+import { Shield, Activity, Menu, X } from 'lucide-react';
 import { useState } from 'react';
-
-const NAV_ITEMS = [
-  { path: '/dashboard', icon: LayoutDashboard, label: 'Overview' },
-  { path: '/dashboard/alerts', icon: AlertTriangle, label: 'Alerts' },
-  { path: '/dashboard/explain', icon: Brain, label: 'Explainability' },
-  { path: '/dashboard/false-positives', icon: ToggleLeft, label: 'FP Control' },
-  { path: '/dashboard/action-log', icon: ClipboardList, label: 'Action Log' },
-];
+import { NAV_ITEMS } from '../config/nav';
 
 interface SidebarProps {
   userCount?: number;

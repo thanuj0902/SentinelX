@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Brain, ArrowRight } from 'lucide-react';
-import { buildUserMap, formatTimestamp } from '../data/seed';
-import { getRiskColor, getFactorColor } from '../utils/helpers';
+import { useUserMap } from '../hooks/useUserMap';
+import { formatTimestamp, getRiskColor, getFactorColor } from '../utils/helpers';
 import type { Alert, User, AnomalyFactor } from '../types';
 
 interface ExplainPageProps {
@@ -12,7 +12,7 @@ interface ExplainPageProps {
 
 export default function ExplainPage({ alerts, users }: ExplainPageProps) {
   const navigate = useNavigate();
-  const userMap = useMemo(() => buildUserMap(users), [users]);
+  const userMap = useUserMap(users);
   const topAlerts = useMemo(
     () => [...alerts].sort((a: Alert, b: Alert) => b.riskScore - a.riskScore).slice(0, 15),
     [alerts]

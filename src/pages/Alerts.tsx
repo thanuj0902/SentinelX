@@ -3,7 +3,7 @@ import { AlertTriangle, Filter, Search, Download } from 'lucide-react';
 import toast from 'react-hot-toast';
 import AlertCard from '../components/AlertCard';
 import SensitivitySlider from '../components/SensitivitySlider';
-import { buildUserMap } from '../data/seed';
+import { useUserMap } from '../hooks/useUserMap';
 import { exportAlertsToCSV } from '../utils/export';
 import type { Alert, User } from '../types';
 
@@ -20,7 +20,7 @@ export default function AlertsPage({ alerts, users, sensitivity, onSensitivityCh
   const [departmentFilter, setDepartmentFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const userMap = useMemo(() => buildUserMap(users), [users]);
+  const userMap = useUserMap(users);
   const departments = useMemo(() => [...new Set(users.map(u => u.department))].sort(), [users]);
 
   const filtered = useMemo(() => {

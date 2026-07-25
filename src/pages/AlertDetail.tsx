@@ -3,9 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Brain, AlertTriangle, User, FileText, ArrowUpRight, Info, MapPin, Monitor, Server, Clock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
-import { getUserById, formatTimestamp, formatBytes } from '../data/seed';
 import RadarFingerprint from '../components/RadarFingerprint';
-import { SEVERITY_COLORS, EVENT_ICONS, getFactorColor, getFactorBarColor } from '../utils/helpers';
+import { getUserById, formatTimestamp, formatBytes, SEVERITY_COLORS, EVENT_ICONS, getFactorColor, getFactorBarColor } from '../utils/helpers';
 import type { Alert, User as UserType, BaselineProfile, AnomalyFactor } from '../types';
 
 interface AlertDetailProps {

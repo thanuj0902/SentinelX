@@ -1,5 +1,5 @@
 import { ClipboardList, Info, AlertTriangle, CheckCircle, Settings } from 'lucide-react';
-import { formatTimestamp } from '../data/seed';
+import { formatTimestamp } from '../utils/helpers';
 import type { ActionLogEntry } from '../types';
 import type { LucideIcon } from 'lucide-react';
 
