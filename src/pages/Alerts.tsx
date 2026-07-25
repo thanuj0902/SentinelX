@@ -1,8 +1,10 @@
 import { useState, useMemo } from 'react';
-import { AlertTriangle, Filter, Search } from 'lucide-react';
+import { AlertTriangle, Filter, Search, Download } from 'lucide-react';
+import toast from 'react-hot-toast';
 import AlertCard from '../components/AlertCard';
 import SensitivitySlider from '../components/SensitivitySlider';
 import { buildUserMap } from '../data/seed';
+import { exportAlertsToCSV } from '../utils/export';
 import type { Alert, User } from '../types';
 
 interface AlertsPageProps {
@@ -52,9 +54,15 @@ export default function AlertsPage({ alerts, users, sensitivity, onSensitivityCh
           <h1 className="font-display text-2xl font-bold text-white">Alert Dashboard</h1>
           <p className="text-sm text-white/40 mt-1">{filtered.length} alerts · {alerts.filter(a => a.severity === 'critical').length} critical</p>
         </div>
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-red-500/10 border border-red-500/20">
-          <AlertTriangle size={14} className="text-red-400 animate-pulse" />
-          <span className="text-xs text-red-400 font-medium">Real-time Feed</span>
+        <div className="flex items-center gap-3">
+          <button onClick={() => { exportAlertsToCSV(filtered, users); toast.success(`Exported ${filtered.length} alerts`); }} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-medium hover:bg-cyan-500/20 transition-all">
+            <Download size={14} />
+            Export CSV
+          </button>
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-red-500/10 border border-red-500/20">
+            <AlertTriangle size={14} className="text-red-400 animate-pulse" />
+            <span className="text-xs text-red-400 font-medium">Real-time Feed</span>
+          </div>
         </div>
       </div>
 

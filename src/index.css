@@ -37,13 +37,21 @@ body {
 }
 
 .glass-card {
-  background: rgba(13, 18, 38, 0.7);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(34, 211, 238, 0.08);
+  background: rgba(13, 18, 38, 0.6);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(34, 211, 238, 0.06);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .glass-card:hover {
-  border-color: rgba(34, 211, 238, 0.15);
+  border-color: rgba(34, 211, 238, 0.18);
+  box-shadow: 0 0 30px rgba(34, 211, 238, 0.04), inset 0 1px 0 rgba(34, 211, 238, 0.06);
+}
+
+.glass-card-strong {
+  background: rgba(13, 18, 38, 0.8);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(34, 211, 238, 0.1);
 }
 
 select {
@@ -58,38 +66,120 @@ select option {
   color: white;
 }
 
+/* --- Animations --- */
+
 @keyframes pulse-glow {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  50% { opacity: 0.4; }
 }
-
-.animate-pulse-glow {
-  animation: pulse-glow 2s ease-in-out infinite;
-}
+.animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
 
 @keyframes slide-up {
-  from { opacity: 0; transform: translateY(16px); }
+  from { opacity: 0; transform: translateY(24px); }
   to { opacity: 1; transform: translateY(0); }
 }
-
-.animate-slide-up {
-  animation: slide-up 0.4s ease-out forwards;
-}
+.animate-slide-up { animation: slide-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 
 @keyframes fade-in {
   from { opacity: 0; }
   to { opacity: 1; }
 }
+.animate-fade-in { animation: fade-in 0.5s ease-out forwards; }
 
-.animate-fade-in {
-  animation: fade-in 0.5s ease-out forwards;
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  33% { transform: translateY(-10px) rotate(1deg); }
+  66% { transform: translateY(5px) rotate(-1deg); }
+}
+.animate-float { animation: float 6s ease-in-out infinite; }
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent 0%, rgba(34,211,238,0.05) 50%, transparent 100%);
+  background-size: 200% 100%;
+  animation: shimmer 3s ease-in-out infinite;
 }
 
-@keyframes count-up {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+@keyframes scan-line {
+  0% { top: -5%; }
+  100% { top: 105%; }
 }
 
-.animate-count-up {
-  animation: count-up 0.6s ease-out forwards;
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes border-glow {
+  0%, 100% { border-color: rgba(34, 211, 238, 0.06); }
+  50% { border-color: rgba(34, 211, 238, 0.2); }
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient-shift 4s ease infinite;
+}
+
+.animate-border-glow {
+  animation: border-glow 3s ease-in-out infinite;
+}
+
+/* Safe area for mobile bottom nav */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Grid background pattern */
+.grid-bg {
+  background-image:
+    linear-gradient(rgba(34, 211, 238, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(34, 211, 238, 0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+
+/* Scan line effect */
+.scan-line::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(34, 211, 238, 0.15), transparent);
+  animation: scan-line 4s linear infinite;
+  pointer-events: none;
+}
+
+/* Typewriter cursor */
+.typewriter-cursor::after {
+  content: '|';
+  animation: pulse-glow 1s step-end infinite;
+  color: #22d3ee;
+  margin-left: 2px;
+}
+
+/* Scroll reveal */
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Glow effects */
+.glow-cyan { box-shadow: 0 0 20px rgba(34, 211, 238, 0.15), 0 0 60px rgba(34, 211, 238, 0.05); }
+.glow-red { box-shadow: 0 0 20px rgba(239, 68, 68, 0.15), 0 0 60px rgba(239, 68, 68, 0.05); }
+.glow-emerald { box-shadow: 0 0 20px rgba(16, 185, 129, 0.15), 0 0 60px rgba(16, 185, 129, 0.05); }
+
+/* Print styles */
+@media print {
+  body { background: white !important; color: black !important; }
+  .glass-card { background: white !important; border: 1px solid #ddd !important; backdrop-filter: none !important; }
+  nav, aside, button, .no-print { display: none !important; }
+  .text-white, .text-white\/70, .text-white\/50, .text-white\/40, .text-white\/30 { color: #333 !important; }
 }
