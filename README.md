@@ -4,8 +4,8 @@
 
 ## Live Demo
 
-- **Frontend**: [https://sentinelx-theta.vercel.app](https://sentinelx-theta.vercel.app)
-- **Backend**: [https://sentinelx-api.onrender.com](https://sentinelx-api.onrender.com)
+- **App:** [https://sentinelx-9e48.onrender.com](https://sentinelx-9e48.onrender.com)
+- **API:** [https://sentinelx-9e48.onrender.com/api/stats](https://sentinelx-9e48.onrender.com/api/stats)
 
 ---
 
