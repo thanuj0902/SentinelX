@@ -8,7 +8,7 @@
     "dev:client": "vite",
     "dev:server": "tsx server/index.js",
     "build": "tsc -b && vite build",
-    "start": "NODE_ENV=production tsx server/index.js",
+    "start": "node server/index.js",
     "lint": "oxlint",
     "preview": "vite preview"
   },
