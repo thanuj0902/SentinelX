@@ -16,6 +16,12 @@ const STEPS = [
   { icon: CheckCircle, title: 'Explain & Alert', desc: 'Every alert comes with a plain-English explanation of why it was flagged' },
 ];
 
+const FEATURES: { title: string; desc: string; icon: React.ElementType; color: string }[] = [
+  { title: 'Statistical, Not Rules', desc: 'Per-user behavioral baselines with z-score deviation scoring. No hardcoded "if after 6pm" logic.', icon: Brain, color: 'cyan' },
+  { title: 'Full Explainability', desc: 'Every alert shows contributing factors with weights. Understand exactly why it was flagged.', icon: Eye, color: 'emerald' },
+  { title: 'Feedback Loop', desc: 'Mark false positives to improve baselines. False positive rate drops with every feedback cycle.', icon: CheckCircle, color: 'amber' },
+];
+
 function useCountUp(end: number, duration = 2000, startOnView = false, inView = true) {
   const [count, setCount] = useState(0);
   const started = useRef(false);
@@ -64,6 +70,67 @@ function AnimatedStat({ stat, index }: { stat: typeof STATS[0]; index: number })
 function FloatingOrb({ className, style }: { className: string; style?: React.CSSProperties }) {
   return (
     <div className={`absolute rounded-full blur-3xl animate-float ${className}`} style={style} />
+  );
+}
+
+interface StepData {
+  icon: React.ElementType;
+  title: string;
+  desc: string;
+}
+
+function StepCard({ step, index, total }: { step: StepData; index: number; total: number }) {
+  const cardRef = useRef(null);
+  const inView = useInView(cardRef, { once: true, margin: '-50px' });
+  return (
+    <motion.div ref={cardRef}
+      initial={{ opacity: 0, y: 30 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.5, delay: index * 0.1, ease: [0.16, 1, 0.3, 1] }}
+      className="relative group"
+    >
+      {index < total - 1 && (
+        <div className="hidden lg:block absolute top-12 left-full w-full h-px bg-gradient-to-r from-cyan-500/20 to-transparent z-0" />
+      )}
+      <div className="glass-card rounded-2xl p-7 h-full relative z-10 group-hover:glow-cyan transition-all duration-500">
+        <div className="w-14 h-14 rounded-2xl bg-cyan-500/10 border border-cyan-500/15 flex items-center justify-center mb-5 group-hover:bg-cyan-500/15 group-hover:border-cyan-500/30 transition-all duration-300">
+          <step.icon size={24} className="text-cyan-400 group-hover:scale-110 transition-transform duration-300" />
+        </div>
+        <div className="text-xs text-cyan-400/50 font-mono mb-2 tracking-wider">STEP {String(index + 1).padStart(2, '0')}</div>
+        <h3 className="font-display text-lg font-semibold text-white mb-2">{step.title}</h3>
+        <p className="text-sm text-white/35 leading-relaxed">{step.desc}</p>
+      </div>
+    </motion.div>
+  );
+}
+
+interface FeatureData {
+  title: string;
+  desc: string;
+  icon: React.ElementType;
+  color: string;
+}
+
+function FeatureCard({ feature, index }: { feature: FeatureData; index: number }) {
+  const cardRef = useRef(null);
+  const inView = useInView(cardRef, { once: true, margin: '-50px' });
+  const bgMap: Record<string, string> = { cyan: 'rgba(34,211,238,0.1)', emerald: 'rgba(16,185,129,0.1)', amber: 'rgba(245,158,11,0.1)' };
+  const borderMap: Record<string, string> = { cyan: 'rgba(34,211,238,0.15)', emerald: 'rgba(16,185,129,0.15)', amber: 'rgba(245,158,11,0.15)' };
+  const colorMap: Record<string, string> = { cyan: '#22d3ee', emerald: '#10b981', amber: '#f59e0b' };
+  return (
+    <motion.div ref={cardRef}
+      initial={{ opacity: 0, y: 30 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.5, delay: index * 0.12 }}
+      className="glass-card rounded-2xl p-8 group hover:animate-border-glow"
+    >
+      <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300"
+        style={{ background: bgMap[feature.color], borderColor: borderMap[feature.color], borderWidth: 1 }}>
+        <feature.icon size={24} style={{ color: colorMap[feature.color] }} />
+      </div>
+      <h3 className="font-display text-lg font-semibold text-white mb-3">{feature.title}</h3>
+      <p className="text-sm text-white/35 leading-relaxed">{feature.desc}</p>
+    </motion.div>
   );
 }
 
@@ -206,30 +273,9 @@ export default function LandingPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {STEPS.map((step, i) => {
-              const cardRef = useRef(null);
-              const inView = useInView(cardRef, { once: true, margin: '-50px' });
-              return (
-                <motion.div key={i} ref={cardRef}
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={inView ? { opacity: 1, y: 0 } : {}}
-                  transition={{ duration: 0.5, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] }}
-                  className="relative group"
-                >
-                  {i < STEPS.length - 1 && (
-                    <div className="hidden lg:block absolute top-12 left-full w-full h-px bg-gradient-to-r from-cyan-500/20 to-transparent z-0" />
-                  )}
-                  <div className="glass-card rounded-2xl p-7 h-full relative z-10 group-hover:glow-cyan transition-all duration-500">
-                    <div className="w-14 h-14 rounded-2xl bg-cyan-500/10 border border-cyan-500/15 flex items-center justify-center mb-5 group-hover:bg-cyan-500/15 group-hover:border-cyan-500/30 transition-all duration-300">
-                      <step.icon size={24} className="text-cyan-400 group-hover:scale-110 transition-transform duration-300" />
-                    </div>
-                    <div className="text-xs text-cyan-400/50 font-mono mb-2 tracking-wider">STEP {String(i + 1).padStart(2, '0')}</div>
-                    <h3 className="font-display text-lg font-semibold text-white mb-2">{step.title}</h3>
-                    <p className="text-sm text-white/35 leading-relaxed">{step.desc}</p>
-                  </div>
-                </motion.div>
-              );
-            })}
+            {STEPS.map((step, i) => (
+              <StepCard key={i} step={step} index={i} total={STEPS.length} />
+            ))}
           </div>
         </div>
       </section>
@@ -249,29 +295,9 @@ export default function LandingPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              { title: 'Statistical, Not Rules', desc: 'Per-user behavioral baselines with z-score deviation scoring. No hardcoded "if after 6pm" logic.', icon: Brain, color: 'cyan' },
-              { title: 'Full Explainability', desc: 'Every alert shows contributing factors with weights. Understand exactly why it was flagged.', icon: Eye, color: 'emerald' },
-              { title: 'Feedback Loop', desc: 'Mark false positives to improve baselines. False positive rate drops with every feedback cycle.', icon: CheckCircle, color: 'amber' },
-            ].map((f, i) => {
-              const cardRef = useRef(null);
-              const inView = useInView(cardRef, { once: true, margin: '-50px' });
-              return (
-                <motion.div key={i} ref={cardRef}
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={inView ? { opacity: 1, y: 0 } : {}}
-                  transition={{ duration: 0.5, delay: i * 0.12 }}
-                  className="glass-card rounded-2xl p-8 group hover:animate-border-glow"
-                >
-                  <div className={`w-12 h-12 rounded-xl bg-${f.color}-500/10 border border-${f.color}-500/15 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300`}
-                    style={{ background: f.color === 'cyan' ? 'rgba(34,211,238,0.1)' : f.color === 'emerald' ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)', borderColor: f.color === 'cyan' ? 'rgba(34,211,238,0.15)' : f.color === 'emerald' ? 'rgba(16,185,129,0.15)' : 'rgba(245,158,11,0.15)' }}>
-                    <f.icon size={24} style={{ color: f.color === 'cyan' ? '#22d3ee' : f.color === 'emerald' ? '#10b981' : '#f59e0b' }} />
-                  </div>
-                  <h3 className="font-display text-lg font-semibold text-white mb-3">{f.title}</h3>
-                  <p className="text-sm text-white/35 leading-relaxed">{f.desc}</p>
-                </motion.div>
-              );
-            })}
+            {FEATURES.map((f, i) => (
+              <FeatureCard key={i} feature={f} index={i} />
+            ))}
           </div>
         </div>
       </section>
